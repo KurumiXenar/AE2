@@ -25,7 +25,7 @@ public class Producer implements  Runnable {
             if (file.isDirectory()) { // a directory - could be symlink
                 String entries[] = file.list();
                 if (entries != null) { // not a symlink
-                    work.add(name);
+                    work.put(name);
                     System.out.println("Pro " + id + " is printing dir: " + name);
                     for (String entry : entries ) {
                         if (entry.compareTo(".") == 0)
@@ -36,7 +36,7 @@ public class Producer implements  Runnable {
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             System.err.println("Error processing "+name+": "+e);
         }
     }
