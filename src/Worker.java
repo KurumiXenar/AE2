@@ -1,5 +1,4 @@
 import java.io.File;
-import java.util.LinkedList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -7,13 +6,15 @@ import java.util.regex.Pattern;
 
 public class Worker implements Runnable {
 
-    private LinkedBlockingQueue<String> work;
-    private LinkedBlockingQueue<String> harvest;
-    private LinkedList<String> currentHarvest;
+    //static function
+    private final static int POISON_PILL_NUM = 0;
+
+    private LinkedBlockingQueue<FileObject> work;
+    private LinkedBlockingQueue<FileObject> harvest;
     Pattern p;
     int id;
 
-    public Worker(LinkedBlockingQueue<String> work, LinkedBlockingQueue<String> harvest, int id, Pattern p) {
+    public Worker(LinkedBlockingQueue<FileObject> work, LinkedBlockingQueue<FileObject> harvest, int id, Pattern p) {
         this.work = work;
         this.harvest = harvest;
         this.id = id;
@@ -24,23 +25,28 @@ public class Worker implements Runnable {
     public void run() {
         while(true){
             try {
-                //Do sth
-                File dir = new File(work.take());
+                //Check if the next file is a poison pill
+                FileObject obj = work.take();
+                if(obj.getSafetyNumber() == POISON_PILL_NUM) {
+                    work.put(new FileObject("empty", POISON_PILL_NUM));
+                    break;
+                }
+
+                File dir = new File(obj.getFileName());
                 File files[] = dir.listFiles();
 
                 for(File file : files) {
                     if(file.isFile()) {
                         String str = file.getName();
-                        System.out.println("Worker " + id + " is printing file: " + str);
                         Matcher m = p.matcher(str);
                         if(m.matches()) {
-                            harvest.add(dir.getAbsolutePath() + '/' + str);
+                            harvest.put(new FileObject(dir.getAbsolutePath() + '/' + str, 1));
                         }
                     }
                 }
 
             } catch (InterruptedException e){
-
+                e.printStackTrace();
             }
         }
     }
