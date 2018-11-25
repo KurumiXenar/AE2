@@ -9,16 +9,16 @@ public class fileCrawler {
 
     public static void main(String args[]) {
 
-        final long startTime = System.currentTimeMillis();
+        final long start = System.currentTimeMillis();
 
         //number of default Worker Threads
-        int numOfWorkers = 4;
+        int numOfWorkers = 2;
 
         //number of default Producer Threads
-        int numberOfProducers = 2;
-        if(args.length > 2) {
-            numberOfProducers = args.length - 1;
-        }
+        int numberOfProducers = 1;
+        //if(args.length > 2) {
+        //    numberOfProducers = args.length - 1;
+       // }
         Producer.NUM_OF_PRODUCER = numberOfProducers;
 
         String pattern = cvtPattern("dunh.tgz");
@@ -37,10 +37,10 @@ public class fileCrawler {
             workers[i].start();
         }
 
-        for (int i = 0; i < numberOfProducers; i++) {
-            producer[i] = new Thread(new Producer(work, args[1], 1));
-            producer[i].start();
-        }
+        //for (int i = 0; i < numberOfProducers; i++) {
+            producer[0] = new Thread(new Producer(work, "./TestDir", 1));
+            producer[0].start();
+        //}
 
         // now interrupt all workers and wait for them to finish
         for(int i = 0; i < workers.length; i++) {
@@ -56,7 +56,8 @@ public class fileCrawler {
         }
 
         // now exit gracefully
-        System.out.println(startTime);
+        long end = System.currentTimeMillis();
+        System.out.println("\nElapsed time: " + (end - start) + " milliseconds");
 
     }
 
