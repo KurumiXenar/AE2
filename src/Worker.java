@@ -1,4 +1,6 @@
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,24 +30,23 @@ public class Worker implements Runnable {
                 //Check if the next file is a poison pill
                 FileObject obj = work.take();
                 if(obj.getSafetyNumber() == POISON_PILL_NUM) {
-                    work.put(new FileObject("empty", POISON_PILL_NUM));
+                    work.put(new FileObject(Paths.get(""), POISON_PILL_NUM));
                     break;
                 }
 
-                File dir = new File(obj.getFileName());
-                File files[] = dir.listFiles();
+                DirectoryStream<Path> stream = Files.newDirectoryStream(obj.getFilePath());
 
-                for(File file : files) {
-                    if(file.isFile()) {
-                        String str = file.getName();
+                for(Path path : stream) {
+                    if(path.toFile().isFile()) {
+                        String str = path.getName(path.getNameCount() - 1).toString();
                         Matcher m = p.matcher(str);
                         if(m.matches()) {
-                            harvest.put(new FileObject(dir.getAbsolutePath() + '/' + str, 1));
+                            harvest.put(new FileObject(path, 1));
                         }
                     }
                 }
 
-            } catch (InterruptedException e){
+            } catch (InterruptedException | IOException e){
                 e.printStackTrace();
             }
         }

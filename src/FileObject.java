@@ -1,19 +1,19 @@
+import java.nio.file.*;
+
 public class FileObject {
 
-    private String fileName;
+    private Path filePath;
     private int safetyNumber;
 
-    public FileObject(String fileName, int safetyNumber) {
-        this.fileName = fileName;
+    public FileObject(Path filePath, int safetyNumber) {
+        this.filePath = filePath;
         this.safetyNumber = safetyNumber;
     }
 
-    public String getFileName() {
-        return fileName;
-    }
+    public Path getFilePath() { return filePath; }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
+    public void setFilePath(Path filePath) {
+        this.filePath = filePath;
     }
 
     public int getSafetyNumber() {

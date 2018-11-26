@@ -1,5 +1,5 @@
-import java.io.File;
-import java.util.LinkedList;
+import java.io.IOException;
+import java.nio.file.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class Producer implements  Runnable {
@@ -12,23 +12,31 @@ public class Producer implements  Runnable {
     private LinkedBlockingQueue<FileObject> work;
     private String name;
     int id;
+    long start;
 
-    public Producer (LinkedBlockingQueue<FileObject> work, String name, int i) {
+    public Producer (LinkedBlockingQueue<FileObject> work, String name, int i, long start) {
         this.work = work;
         this.name = name;
         this.id = i;
+        this.start = start;
     }
 
     @Override
     public void run() {
 
-        processDirectory(name);
+        Path dir = FileSystems.getDefault().getPath( name );
+        try {
+            processDirectory(dir);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         // Add Poison pill at end
         try {
             PRODUCERS_DONE++;
 
             if(PRODUCERS_DONE == NUM_OF_PRODUCER) {
-                FileObject fileObj = new FileObject("empty", POISON_PILL_NUM);
+                FileObject fileObj = new FileObject( Paths.get("") ,POISON_PILL_NUM);
                 work.put(fileObj);
             }
         } catch (InterruptedException e) {
@@ -36,21 +44,14 @@ public class Producer implements  Runnable {
         }
     }
 
-    private void processDirectory( String name ) {
+    private void processDirectory( Path dir ) throws IOException {
         try {
-            File file = new File(name); // create a File object
-            if (file.isDirectory()) { // a directory - could be symlink
-                String entries[] = file.list();
-                if (entries != null) { // not a symlink
-                    FileObject fileObj = new FileObject(name, 1);
-                    work.put(fileObj);
-                    for (String entry : entries ) {
-                        if (entry.compareTo(".") == 0)
-                            continue;
-                        if (entry.compareTo("..") == 0)
-                            continue;
-                        processDirectory(name+"/"+entry);
-                    }
+            DirectoryStream<Path> stream = Files.newDirectoryStream(dir);
+            FileObject fileObj = new FileObject(dir, 1);
+            work.put(fileObj);
+            for (Path path : stream ) {
+                if(Files.isDirectory(path)){
+                    processDirectory(Paths.get(path.toString()));
                 }
             }
         } catch (InterruptedException e) {

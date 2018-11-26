@@ -10,51 +10,78 @@ public class fileCrawler {
     public static void main(String args[]) {
 
         final long start = System.currentTimeMillis();
-
-        //number of default Worker Threads
-        int numOfWorkers = 2;
-
-        //number of default Producer Threads
-        int numberOfProducers = 1;
-        //if(args.length > 2) {
-        //    numberOfProducers = args.length - 1;
-       // }
-        Producer.NUM_OF_PRODUCER = numberOfProducers;
-
-        String pattern = cvtPattern("dunh.tgz");
-        p = Pattern.compile(pattern);
-
-        // Initialise Workers
-        Thread[] workers = new Thread[numOfWorkers];
-        Thread[] producer = new Thread[numberOfProducers];
-
-        for(int i= 0; i < numOfWorkers; i++) {
-            workers[i] = new Thread(new Worker(work, harvest, i, p));
+        if(args.length < 1 || args.length > 2){
+            System.out.println("The usage string is : java -cp . fileCrawler pattern [directory]\n");
         }
+        else {
+            //number of default Worker Threads
+            int numOfWorkers = 2;
+            String threads = System.getenv("CRAWLER_THREADS");
+            if (threads != null) {
+                numOfWorkers = Integer.valueOf(threads);
+            }
 
-        // start the workers
-        for (int i = 0; i < numOfWorkers; i++) {
-            workers[i].start();
-        }
 
-        //for (int i = 0; i < numberOfProducers; i++) {
-            producer[0] = new Thread(new Producer(work, "./TestDir", 1));
+            //number of default Producer Threads
+            int numberOfProducers = 1;
+            String pattern = "";
+            String dir = "";
+            switch (args.length) {
+                case 1:
+                    pattern = cvtPattern(args[0]);
+                    dir = ".";
+                    break;
+                case 2:
+                    pattern = cvtPattern(args[0]);
+                    dir = args[1];
+                    break;
+                default:
+                    break;
+            }
+
+            Producer.NUM_OF_PRODUCER = numberOfProducers;
+
+            p = Pattern.compile(pattern);
+
+            // Initialise Workers
+            Thread[] workers = new Thread[numOfWorkers];
+            Thread[] producer = new Thread[numberOfProducers];
+
+            for (int i = 0; i < numOfWorkers; i++) {
+                workers[i] = new Thread(new Worker(work, harvest, i, p));
+            }
+
+            // start the workers
+            for (int i = 0; i < numOfWorkers; i++) {
+                workers[i].start();
+            }
+
+            //for (int i = 0; i < numberOfProducers; i++) {
+            producer[0] = new Thread(new Producer(work, dir, 1, start));
             producer[0].start();
-        //}
+            //}
 
-        // now interrupt all workers and wait for them to finish
-        for(int i = 0; i < workers.length; i++) {
             try {
-                workers[i].join();
-            } catch (Exception e) {
+                producer[0].join();
+                long producerTime = System.currentTimeMillis();
+                System.out.println("\nProducer Elapsed time: " + (producerTime - start) + " milliseconds");
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }
 
-        for (FileObject fileObj : harvest) {
-            System.out.println(fileObj.getFileName());
-        }
+            // now interrupt all workers and wait for them to finish
+            for (int i = 0; i < workers.length; i++) {
+                try {
+                    workers[i].join();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
+            for (FileObject fileObj : harvest) {
+                System.out.println(fileObj.getFilePath());
+            }
+        }
         // now exit gracefully
         long end = System.currentTimeMillis();
         System.out.println("\nElapsed time: " + (end - start) + " milliseconds");
