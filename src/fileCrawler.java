@@ -1,3 +1,12 @@
+/*
+Authorship statement
+Name: Nigel Ng
+Login: 2427257N
+Title of Assignment: APH Exercise 2
+This is my own work as defined in the Academic Ethics agreement I
+have signed.
+ */
+
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
@@ -23,19 +32,23 @@ public class fileCrawler {
 
 
             //number of default Producer Threads
-            int numberOfProducers = 1;
-            String pattern = "";
-            String dir = "";
+            int numberOfProducers = args.length - 1;
+            String pattern;
+            String[] dir = new String[numberOfProducers];
             switch (args.length) {
                 case 1:
                     pattern = cvtPattern(args[0]);
-                    dir = ".";
+                    dir[0] = ".";
                     break;
                 case 2:
                     pattern = cvtPattern(args[0]);
-                    dir = args[1];
+                    dir[0] = args[1];
                     break;
                 default:
+                    pattern = cvtPattern(args[0]);
+                    for(int i = 0; i < numberOfProducers; i++){
+                        dir[i] = args[i+1];
+                    }
                     break;
             }
 
@@ -56,17 +69,17 @@ public class fileCrawler {
                 workers[i].start();
             }
 
-            //for (int i = 0; i < numberOfProducers; i++) {
-            producer[0] = new Thread(new Producer(work, dir, 1, start));
-            producer[0].start();
-            //}
+            for (int i = 0; i < numberOfProducers; i++) {
+                producer[i] = new Thread(new Producer(work, dir[i], i, start));
+                producer[i].start();
+            }
 
-            try {
-                producer[0].join();
-                long producerTime = System.currentTimeMillis();
-                System.out.println("\nProducer Elapsed time: " + (producerTime - start) + " milliseconds");
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            for (int i = 0; i < producer.length; i++) {
+                try {
+                    producer[i].join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
 
             // now interrupt all workers and wait for them to finish

@@ -1,3 +1,12 @@
+/*
+Authorship statement
+Name: Nigel Ng
+Login: 2427257N
+Title of Assignment: APH Exercise 2
+This is my own work as defined in the Academic Ethics agreement I
+have signed.
+ */
+
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.concurrent.LinkedBlockingQueue;
