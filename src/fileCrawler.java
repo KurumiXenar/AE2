@@ -19,7 +19,7 @@ public class fileCrawler {
     public static void main(String args[]) {
 
         final long start = System.currentTimeMillis();
-        if(args.length < 1 || args.length > 2){
+        if(args.length < 1){
             System.out.println("The usage string is : java -cp . fileCrawler pattern [directory]\n");
         }
         else {
