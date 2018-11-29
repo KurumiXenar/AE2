@@ -32,23 +32,47 @@ public class fileCrawler {
 
 
             //number of default Producer Threads
-            int numberOfProducers = args.length - 1;
+            int numberOfProducers = 2;
+            int numberOfDirPerProducer = (args.length - 1)/2;
             String pattern;
-            String[] dir = new String[numberOfProducers];
+            String[] dir1;
+            String[] dir2;
             switch (args.length) {
                 case 1:
+                    numberOfProducers = 1;
                     pattern = cvtPattern(args[0]);
-                    dir[0] = ".";
+                    dir1 = new String[1];
+                    dir1[0] = ".";
+                    dir2 = new String[0];
                     break;
                 case 2:
+                    numberOfProducers = 1;
                     pattern = cvtPattern(args[0]);
-                    dir[0] = args[1];
+                    dir1 = new String[1];
+                    dir1[0] = args[1];
+                    dir2 = new String[0];
                     break;
                 default:
                     pattern = cvtPattern(args[0]);
-                    for(int i = 0; i < numberOfProducers; i++){
-                        dir[i] = args[i+1];
+                    dir1 = new String[numberOfDirPerProducer];
+                    for(int i = 0; i < numberOfDirPerProducer; i++){
+                        dir1[i] = args[i+1];
                     }
+                    if(args.length % 2 == 1){
+                        dir2 = new String[numberOfDirPerProducer + 1];
+                        for(int i = 0, j = numberOfDirPerProducer + 1; j < args.length; i++){
+                            dir2[i] = args[j];
+                            j++;
+                        }
+                    }
+                    else{
+                        dir2 = new String[numberOfDirPerProducer];
+                        for(int i = 0, j = numberOfDirPerProducer + 1; j < args.length; i++){
+                            dir2[i] = args[j];
+                            j++;
+                        }
+                    }
+
                     break;
             }
 
@@ -69,10 +93,14 @@ public class fileCrawler {
                 workers[i].start();
             }
 
-            for (int i = 0; i < numberOfProducers; i++) {
-                producer[i] = new Thread(new Producer(work, dir[i], i, start));
-                producer[i].start();
+            producer[0] = new Thread(new Producer(work, dir1, 1, start));
+            producer[0].start();
+
+            if(numberOfProducers == 2) {
+                producer[1] = new Thread(new Producer(work, dir2, 2, start));
+                producer[1].start();
             }
+
 
             for (int i = 0; i < producer.length; i++) {
                 try {
@@ -81,6 +109,8 @@ public class fileCrawler {
                     e.printStackTrace();
                 }
             }
+
+            long prodEnd = System.currentTimeMillis();
 
             // now interrupt all workers and wait for them to finish
             for (int i = 0; i < workers.length; i++) {
@@ -94,10 +124,14 @@ public class fileCrawler {
             for (FileObject fileObj : harvest) {
                 System.out.println(fileObj.getFilePath());
             }
+
+            // now exit gracefully
+            long end = System.currentTimeMillis();
+            System.out.println("\nProducer elapsed time: " + (prodEnd - start) + " milliseconds");
+            System.out.println("\nElapsed time: " + (end - start) + " milliseconds");
+            System.out.println("\n Difference in elapsed time: " + (end - prodEnd) + " milliseconds");
+
         }
-        // now exit gracefully
-        long end = System.currentTimeMillis();
-        System.out.println("\nElapsed time: " + (end - start) + " milliseconds");
 
     }
 

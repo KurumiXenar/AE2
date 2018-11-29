@@ -19,11 +19,11 @@ public class Producer implements  Runnable {
     public static int NUM_OF_PRODUCER = 0;
 
     private LinkedBlockingQueue<FileObject> work;
-    private String name;
+    private String[] name;
     int id;
     long start;
 
-    public Producer (LinkedBlockingQueue<FileObject> work, String name, int i, long start) {
+    public Producer (LinkedBlockingQueue<FileObject> work, String[] name, int i, long start) {
         this.work = work;
         this.name = name;
         this.id = i;
@@ -32,12 +32,13 @@ public class Producer implements  Runnable {
 
     @Override
     public void run() {
-
-        Path dir = FileSystems.getDefault().getPath( name );
-        try {
-            processDirectory(dir);
-        } catch (IOException e) {
-            e.printStackTrace();
+        for(int i = 0; i < name.length; i++) {
+            Path dir = FileSystems.getDefault().getPath(name[i]);
+            try {
+                processDirectory(dir);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         // Add Poison pill at end
