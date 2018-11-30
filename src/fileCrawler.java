@@ -33,46 +33,19 @@ public class fileCrawler {
 
             //number of default Producer Threads
             int numberOfProducers = 2;
-            int numberOfDirPerProducer = (args.length - 1)/2;
             String pattern;
-            String[] dir1;
-            String[] dir2;
             switch (args.length) {
                 case 1:
                     numberOfProducers = 1;
                     pattern = cvtPattern(args[0]);
-                    dir1 = new String[1];
-                    dir1[0] = ".";
-                    dir2 = new String[0];
                     break;
                 case 2:
                     numberOfProducers = 1;
                     pattern = cvtPattern(args[0]);
-                    dir1 = new String[1];
-                    dir1[0] = args[1];
-                    dir2 = new String[0];
                     break;
                 default:
+                    numberOfProducers = 2;
                     pattern = cvtPattern(args[0]);
-                    dir1 = new String[numberOfDirPerProducer];
-                    for(int i = 0; i < numberOfDirPerProducer; i++){
-                        dir1[i] = args[i+1];
-                    }
-                    if(args.length % 2 == 1){
-                        dir2 = new String[numberOfDirPerProducer + 1];
-                        for(int i = 0, j = numberOfDirPerProducer + 1; j < args.length; i++){
-                            dir2[i] = args[j];
-                            j++;
-                        }
-                    }
-                    else{
-                        dir2 = new String[numberOfDirPerProducer];
-                        for(int i = 0, j = numberOfDirPerProducer + 1; j < args.length; i++){
-                            dir2[i] = args[j];
-                            j++;
-                        }
-                    }
-
                     break;
             }
 
@@ -93,12 +66,34 @@ public class fileCrawler {
                 workers[i].start();
             }
 
-            producer[0] = new Thread(new Producer(work, dir1, 1, start));
-            producer[0].start();
 
-            if(numberOfProducers == 2) {
-                producer[1] = new Thread(new Producer(work, dir2, 2, start));
+            if(args.length < 2){
+                Producer producer1 = new Producer(work, 1, start);
+                producer1.nameAdd(".");
+                producer[0] = new Thread(producer1);
+                producer[0].start();
+            }
+            else if (args.length == 2){
+                Producer producer1 = new Producer(work, 1, start);
+                producer1.nameAdd(args[1]);
+                producer[0] = new Thread(producer1);
+                producer[0].start();
+
+            }
+            else {
+                Producer producer1 = new Producer(work, 1, start);
+                Producer producer2 = new Producer(work, 2, start);
+                for(int i = 1; i < args.length; i+=2){
+                    producer1.nameAdd(args[i]);
+                    if(i+1 < args.length) {
+                        producer2.nameAdd(args[i+1]);
+                    }
+                }
+                producer[0] = new Thread(producer1);
+                producer[1] = new Thread(producer2);
+                producer[0].start();
                 producer[1].start();
+
             }
 
 

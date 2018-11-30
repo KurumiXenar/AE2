@@ -10,6 +10,7 @@ have signed.
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.ArrayList;
 
 public class Producer implements  Runnable {
 
@@ -19,21 +20,25 @@ public class Producer implements  Runnable {
     public static int NUM_OF_PRODUCER = 0;
 
     private LinkedBlockingQueue<FileObject> work;
-    private String[] name;
+    private ArrayList<String> name;
     int id;
     long start;
 
-    public Producer (LinkedBlockingQueue<FileObject> work, String[] name, int i, long start) {
+    public Producer (LinkedBlockingQueue<FileObject> work, int i, long start) {
         this.work = work;
-        this.name = name;
         this.id = i;
         this.start = start;
+        name = new ArrayList<String>();
+    }
+
+    public void nameAdd(String name) {
+        this.name.add(name);
     }
 
     @Override
     public void run() {
-        for(int i = 0; i < name.length; i++) {
-            Path dir = FileSystems.getDefault().getPath(name[i]);
+        for(int i = 0; i < name.size(); i++) {
+            Path dir = FileSystems.getDefault().getPath(name.get(i));
             try {
                 processDirectory(dir);
             } catch (IOException e) {
